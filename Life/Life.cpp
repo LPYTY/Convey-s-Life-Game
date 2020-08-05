@@ -2,6 +2,7 @@
 #include <cmath>
 #include "life.h"
 #include <thread>
+#include <mutex>
 
 #define RNDRATE 1
 
@@ -23,10 +24,11 @@ int side_length = 10;
 unsigned int xpivot = 0x08000000, ypivot = 0x08000000;
 bool needErase, started;
 unsigned int selected_builtin, selected_direction, kbd_input_state, TIMER = 500;
-unsigned __int3264 active_timer;
+unsigned int active_timer;
 const unsigned int move_length = 30;
 HWND hwnd, hdialog;
 char ids_help_about[256], ids_help_help[1024];
+mutex maplock;
 
 inline void redraw_erase() {
 	RECT rect;
@@ -312,9 +314,9 @@ private:
 
 	struct builtin {
 		const POINT* points;
-		int size;
-		int length;
-		int height;
+		BYTE size;
+		BYTE length;
+		BYTE height;
 	};
 
 	struct ppool {
@@ -588,14 +590,15 @@ void onPaint(HWND hWnd) {
 	return;
 }
 
-DWORD WINAPI timer(LPVOID c) {
-	unsigned __int3264 current_timer = (unsigned __int3264)c;
+void timer(unsigned int current_timer) {
 	while (true) {
 		do Sleep(TIMER); while (!started && current_timer == active_timer);
-		if (current_timer != active_timer) return 0;
+		if (current_timer != active_timer) return;
 		RECT rect;
 		GetClientRect(hwnd, &rect);
+		maplock.lock();
 		map.calc();
+		maplock.unlock();
 		RedrawWindow(hwnd, &rect, 0, RDW_INVALIDATE | RDW_UPDATENOW);
 	}
 }
@@ -624,11 +627,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 	case WM_LBUTTONDOWN: {
 		POINTS cpos = MAKEPOINTS(lParam);
 		int xc = cpos.x / side_length, yc = cpos.y / side_length;
+		maplock.lock();
 		map.change(xc + xpivot, yc + ypivot);
+		maplock.unlock();
 		RECT crect = { xc * side_length + 1, yc * side_length + 1, (xc + 1) * side_length, (yc + 1) * side_length };
 		needErase = true;
 		RedrawWindow(hwnd, &crect, 0, RDW_INVALIDATE | RDW_ERASE);
-		return DefWindowProc(hwnd, Message, wParam, lParam);
 		break;
 	}
 
@@ -700,7 +704,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 	case WM_RBUTTONDOWN: {
 		POINTS cpos = MAKEPOINTS(lParam);
 		int xc = cpos.x / side_length, yc = cpos.y / side_length;
+		maplock.lock();
 		map.add_builtin(xc + xpivot, yc + ypivot);
+		maplock.unlock();
 		RECT crect;
 		if (selected_direction < 0);
 		else if (selected_direction < 4)
@@ -708,8 +714,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 		else if (selected_direction < 8)
 			crect = { xc * side_length + 1, yc * side_length + 1, (xc + map.get_builtin_info().bottom) * side_length, (yc + map.get_builtin_info().right) * side_length };
 		needErase = true;
-		RedrawWindow(hwnd, &crect, 0, RDW_INVALIDATE | RDW_ERASE); 
-		return DefWindowProc(hwnd, Message, wParam, lParam);
+		RedrawWindow(hwnd, &crect, 0, RDW_INVALIDATE | RDW_ERASE);
 		break;
 	}
 
@@ -801,7 +806,8 @@ LRESULT CALLBACK DlgProc(HWND hdialog, UINT Message, WPARAM wParam, LPARAM lPara
 			int v = atoi(val);
 			if (v <= 0) SendMessage(hTimer, WM_SETTEXT, 0, (LPARAM)"1");
 			else {
-				CloseHandle(CreateThread(nullptr, 0, timer, (LPVOID)++active_timer, 0, nullptr));
+				thread Timer(timer, ++active_timer);
+				Timer.detach();
 				TIMER = v;
 			}
 			break;
@@ -893,7 +899,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	tst();
 
-	CloseHandle(CreateThread(nullptr, 0, timer, (LPVOID)++active_timer, 0, nullptr));
+	thread Timer(timer, 0);
+	Timer.detach();
 
 	/*
 		This is the heart of our program where all input is processed and
