@@ -735,6 +735,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 			map.calc();
 			RedrawWindow(hwnd, &rect, 0, RDW_INVALIDATE | RDW_UPDATENOW);
 		}
+		break;
 	}
 				   /* All other messages (a lot of them) are processed using default procedures */
 	default:
