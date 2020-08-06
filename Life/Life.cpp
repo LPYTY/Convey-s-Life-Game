@@ -1,8 +1,6 @@
 #include "framework.h"
 #include <cmath>
 #include "life.h"
-#include <thread>
-#include <mutex>
 
 #define RNDRATE 1
 #define TIMERID 1
