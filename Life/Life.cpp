@@ -5,6 +5,7 @@
 #include <mutex>
 
 #define RNDRATE 1
+#define TIMERID 1
 
 /*
 	0------------------>i
@@ -59,8 +60,8 @@ public:
 		node_pool = new node[SIZE];
 		memset(head_pool, 0, SIZE * sizeof(head));
 		memset(node_pool, 0, SIZE * sizeof(node));
-		for (register int i = 0; i < SIZE; i++) (head_pool + i)->pnext = head_pool + i + 1;
-		for (register int i = 0; i < SIZE; i++) (node_pool + i)->pnext = node_pool + i + 1;
+		for (int i = 0; i < SIZE; i++) (head_pool + i)->pnext = head_pool + i + 1;
+		for (int i = 0; i < SIZE; i++) (node_pool + i)->pnext = node_pool + i + 1;
 		(head_pool + SIZE - 1)->pnext = nullptr;  (node_pool + SIZE - 1)->pnext = nullptr;
 		cur.pnext = nullptr;
 		phead_pools = { head_pool, nullptr, nullptr };
@@ -69,13 +70,13 @@ public:
 	}
 
 	void change(unsigned int xpos, unsigned int ypos, int type = 0) { //type: {0: 1->0, 0->1; 1: 0,1->1; 2: 0,1->0}
-		register head* px = &cur;
+		head* px = &cur;
 		while (px->pnext && px->pnext->x <= xpos) px = px->pnext;
 		if (px->x == xpos && px->pnode) {
-			register node* py = px->pnode;
+			node* py = px->pnode;
 			while (py->pnext && py->pnext->y < ypos) py = py->pnext;
 			if (py->pnext && py->pnext->y == ypos) { if (type != 1) del(py); }	//If the node already exists: destroy the node
-			else if(type != 2) {										//If the node doesn't exist: insert a node
+			else if (type != 2) {										//If the node doesn't exist: insert a node
 				node* pn = insert(py);
 				pn->y = ypos;
 				pn->state = true;
@@ -92,15 +93,15 @@ public:
 	}
 
 	void calc() {
-		register head* px = cur.pnext;
+		head* px = cur.pnext;
 		while (px) {
-			register node* py = px->pnode->pnext;
+			node* py = px->pnode->pnext;
 			for (; py; py = py->pnext) {
 				if (!py->state) continue;
 				int x = px->x;
 				int y = py->y;
-				for (register int i = x - 1; i <= x + 1; i++)
-					for (register int j = y - 1; j <= y + 1; j++) add(i, j);
+				for (int i = x - 1; i <= x + 1; i++)
+					for (int j = y - 1; j <= y + 1; j++) add(i, j);
 				mark(x, y);
 			}
 			px = px->pnext;
@@ -110,7 +111,7 @@ public:
 		cur.pnext = nullptr;
 		px = nxt.pnext;
 		while (px) {
-			register node* py = px->pnode->pnext;
+			node* py = px->pnode->pnext;
 			for (; py; py = py->pnext) {
 				if (py->count == 3) change(px->x, py->y);
 				else if (py->state && py->count == 4) change(px->x, py->y);
@@ -124,13 +125,13 @@ public:
 		Sleep(TIMER);
 		memset(head_pool, 0, SIZE * sizeof(head));
 		memset(node_pool, 0, SIZE * sizeof(node));
-		for (register int i = 0; i < SIZE; i++) (head_pool + i)->pnext = head_pool + i + 1;
-		for (register int i = 0; i < SIZE; i++) (node_pool + i)->pnext = node_pool + i + 1;
+		for (int i = 0; i < SIZE; i++) (head_pool + i)->pnext = head_pool + i + 1;
+		for (int i = 0; i < SIZE; i++) (node_pool + i)->pnext = node_pool + i + 1;
 		(head_pool + SIZE - 1)->pnext = nullptr;  (node_pool + SIZE - 1)->pnext = nullptr;
 		cur.pnext = nullptr, nxt.pnext = nullptr, pre.pnext = nullptr, ppre = nullptr;
 		redraw_erase();
-		
-		ppool* phead = phead_pools.pnext, *pdel = phead;
+
+		ppool* phead = phead_pools.pnext, * pdel = phead;
 		while (phead != nullptr) {
 			delete[] phead->phead;
 			phead = phead->pnext;
@@ -153,32 +154,32 @@ public:
 
 	void add_builtin(const unsigned int& xpos, const unsigned int& ypos, const unsigned int& b = selected_builtin, const unsigned int& d = selected_direction) {
 		if (b >= 10 || d >= 8) return;
-		register unsigned int s = builtins[b].size, l = builtins[b].length - 1, h = builtins[b].height - 1;
+		unsigned int s = builtins[b].size, l = builtins[b].length - 1, h = builtins[b].height - 1;
 		const POINT* cur = builtins[b].points;
 		switch (d) {
 		case 0:
-			for (register unsigned int i = 0; i < s; i++) change(xpos + cur[i].x, ypos + cur[i].y, 1);
+			for (unsigned int i = 0; i < s; i++) change(xpos + cur[i].x, ypos + cur[i].y, 1);
 			break;
 		case 1:
-			for (register unsigned int i = 0; i < s; i++) change(xpos + cur[i].x, ypos + h - cur[i].y, 1);
+			for (unsigned int i = 0; i < s; i++) change(xpos + cur[i].x, ypos + h - cur[i].y, 1);
 			break;
 		case 2:
-			for (register unsigned int i = 0; i < s; i++) change(xpos + l - cur[i].x, ypos + cur[i].y, 1);
+			for (unsigned int i = 0; i < s; i++) change(xpos + l - cur[i].x, ypos + cur[i].y, 1);
 			break;
 		case 3:
-			for (register unsigned int i = 0; i < s; i++) change(xpos + l - cur[i].x, ypos + h - cur[i].y, 1);
+			for (unsigned int i = 0; i < s; i++) change(xpos + l - cur[i].x, ypos + h - cur[i].y, 1);
 			break;
 		case 4:
-			for (register unsigned int i = 0; i < s; i++) change(xpos + cur[i].y, ypos + cur[i].x, 1);
+			for (unsigned int i = 0; i < s; i++) change(xpos + cur[i].y, ypos + cur[i].x, 1);
 			break;
 		case 5:
-			for (register unsigned int i = 0; i < s; i++) change(xpos + cur[i].y, ypos + l - cur[i].x, 1);
+			for (unsigned int i = 0; i < s; i++) change(xpos + cur[i].y, ypos + l - cur[i].x, 1);
 			break;
 		case 6:
-			for (register unsigned int i = 0; i < s; i++) change(xpos + h - cur[i].y, ypos + cur[i].x, 1);
+			for (unsigned int i = 0; i < s; i++) change(xpos + h - cur[i].y, ypos + cur[i].x, 1);
 			break;
 		case 7:
-			for (register unsigned int i = 0; i < s; i++) change(xpos + h - cur[i].y, ypos + l - cur[i].x, 1);
+			for (unsigned int i = 0; i < s; i++) change(xpos + h - cur[i].y, ypos + l - cur[i].x, 1);
 			break;
 		}
 	}
@@ -187,13 +188,13 @@ public:
 		needErase = false;
 		unsigned int left = rect.left / side_length + xpivot, right = rect.right / side_length + xpivot;
 		unsigned int top = rect.top / side_length + ypivot, bottom = rect.bottom / side_length + ypivot;
-		register head* pl = &cur, *ppl = &pre;
+		head* pl = &cur, * ppl = &pre;
 		while (pl->pnext && pl->pnext->x < left) pl = pl->pnext;
 		while (ppl->pnext && ppl->pnext->x < left) ppl = ppl->pnext;
-		register head* px = pl, *ppx = ppl;
+		head* px = pl, * ppx = ppl;
 		while (px->pnext && px->pnext->x <= right) {
 			if (!erase) while (ppx->pnext && ppx->pnext->x < px->pnext->x) ppx = ppx->pnext;
-			register node* py = px->pnext->pnode, *ppy = (ppx->pnext && ppx->pnext->x == px->pnext->x) ? ppx->pnext->pnode : nullptr;
+			node* py = px->pnext->pnode, * ppy = (ppx->pnext && ppx->pnext->x == px->pnext->x) ? ppx->pnext->pnode : nullptr;
 			while (py->pnext && py->pnext->y < top) py = py->pnext;
 			if (!erase && ppy) while (ppy->pnext && ppy->pnext->y < top) ppy = ppy->pnext;
 			while (py->pnext && py->pnext->y <= bottom) {
@@ -216,7 +217,7 @@ public:
 		px = pl, ppx = ppl;
 		while (ppx->pnext && ppx->pnext->x <= right) {
 			while (px->pnext && px->pnext->x < ppx->pnext->x) px = px->pnext;
-			register node* ppy = ppx->pnext->pnode, *py = (px->pnext && px->pnext->x == ppx->pnext->x) ? px->pnext->pnode : nullptr;
+			node* ppy = ppx->pnext->pnode, * py = (px->pnext && px->pnext->x == ppx->pnext->x) ? px->pnext->pnode : nullptr;
 			while (ppy->pnext && ppy->pnext->y < top) ppy = ppy->pnext;
 			if (py) while (py->pnext && py->pnext->y < top) py = py->pnext;
 			while (ppy->pnext && ppy->pnext->y <= bottom) {
@@ -252,18 +253,18 @@ public:
 		const static HBRUSH red_brush = CreateSolidBrush(RGB(255, 0, 0));
 		const builtin& bi = builtins[b];
 		HDC hdc = GetDC(hPreview);
-		
+
 		//Clear
 		RECT erase_rect = { 1, 1, xl, yl };
 		FillRect(hdc, &erase_rect, white_brush);
 		if (b >= 10 || d >= 8 || !bi.size) return;
-		
+
 		//Calc
 		int length = d & 4 ? bi.height : bi.length, height = (d & 4 ? bi.length : bi.height);
 		int xr = xl / length, yr = yl / height, r = xr < yr ? xr : yr;
 		if (!r) return;
 		int xs = ((xl - r * length) >> 1) + 1, ys = ((yl - r * height) >> 1) + 1;
-		
+
 		//Draw
 		for (int i = 0; i < bi.size; i++) {
 			int x = bi.points[i].x, y = bi.points[i].y;
@@ -328,10 +329,10 @@ private:
 	head* enlarge_head_pool() {
 		head* nhead_pool = new head[SIZE];
 		memset(nhead_pool, 0, SIZE * sizeof(head));
-		for (register int i = 0; i < SIZE; i++) (nhead_pool + i)->pnext = nhead_pool + i + 1;
+		for (int i = 0; i < SIZE; i++) (nhead_pool + i)->pnext = nhead_pool + i + 1;
 		(nhead_pool + SIZE - 1)->pnext = nullptr;
 		head_pool->pnext = nhead_pool;
-		
+
 		ppool* nphead_pool = new ppool;
 		nphead_pool->phead = nhead_pool;
 		nphead_pool->pnext = phead_pools.pnext;
@@ -346,7 +347,7 @@ private:
 	node* enlarge_node_pool() {
 		node* nnode_pool = new node[SIZE];
 		memset(nnode_pool, 0, SIZE * sizeof(node));
-		for (register int i = 0; i < SIZE; i++) (nnode_pool + i)->pnext = nnode_pool + i + 1;
+		for (int i = 0; i < SIZE; i++) (nnode_pool + i)->pnext = nnode_pool + i + 1;
 		(nnode_pool + SIZE - 1)->pnext = nullptr;
 		node_pool->pnext = nnode_pool;
 
@@ -380,7 +381,7 @@ private:
 		head_pool->pnext = pn->pnext;
 		pn->pnext = p->pnext;
 		p->pnext = pn;
-		
+
 		node* pnode = node_pool->pnext ? node_pool->pnext : enlarge_node_pool();
 		node_pool->pnext = pnode->pnext;
 		pn->pnode = pnode;
@@ -406,7 +407,7 @@ private:
 
 	void del(head* h) {
 		head* pd = h->pnext;
-		
+
 		node* pdn = pd->pnode;
 		pd->pnode = nullptr;
 		pdn->pnext = node_pool->pnext;
@@ -421,11 +422,11 @@ private:
 
 	void add(unsigned int xpos, unsigned int ypos) {
 		if (!ppre) ppre = &nxt;
-		register head* px = &nxt;
+		head* px = &nxt;
 		if (ppre->pnext && ppre->pnext->x <= xpos) px = ppre;
 		while (px->pnext && px->pnext->x <= xpos) px = px->pnext;
 		if (px->x == xpos && px->pnode) {
-			register node* py = px->pnode;
+			node* py = px->pnode;
 			while (py->pnext && py->pnext->y <= ypos) py = py->pnext;
 			if (py->y == ypos) py->count++;				//If the node already exists: add 1 to count
 			else {										//If the node doesn't exist: insert a node
@@ -446,14 +447,14 @@ private:
 	}
 
 	void mark(unsigned int xpos, unsigned int ypos) {
-		register head* px = &nxt;
+		head* px = &nxt;
 		while (px->pnext && px->pnext->x <= xpos) px = px->pnext;
-		register node* py = px->pnode;
+		node* py = px->pnode;
 		while (py->pnext && py->pnext->y <= ypos) py = py->pnext;
 		py->state = true;
 	}
 
-	void clear(register head* h) {
+	void clear(head* h) {
 		while (h->pnext) {
 			node* hn = h->pnext->pnode;
 			while (hn->pnext) del(hn);
@@ -479,7 +480,7 @@ private:
 			{1,0,0,0,0},
 			{1,0,0,0,1},
 			{1,1,1,1,0}	*/
-		
+
 		const static POINT builtin1[] = {
 			{0, 1}, {0, 2}, {0, 3}, {1, 0}, {1, 3}, {2, 3}, {3, 3}, {4, 0}, {4, 2}
 		};
@@ -488,7 +489,7 @@ private:
 		builtins[1].length = 5;
 		builtins[1].height = 4;
 
-		/*	
+		/*
 			{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0},
 			{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0},
 			{0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1},
@@ -573,11 +574,11 @@ void onPaint(HWND hWnd) {
 
 	/*  lines  */
 	if (needErase) {
-		for (register int i = updateRect.left / side_length; i <= updateRect.right / side_length; i++) {
+		for (int i = updateRect.left / side_length; i <= updateRect.right / side_length; i++) {
 			MoveToEx(hdc, i * side_length, updateRect.top, nullptr);
 			LineTo(hdc, i * side_length, updateRect.bottom);
 		}
-		for (register int i = updateRect.top / side_length; i <= updateRect.bottom / side_length; i++) {
+		for (int i = updateRect.top / side_length; i <= updateRect.bottom / side_length; i++) {
 			MoveToEx(hdc, updateRect.left, i * side_length, nullptr);
 			LineTo(hdc, updateRect.right, i * side_length);
 		}
@@ -585,23 +586,10 @@ void onPaint(HWND hWnd) {
 
 	/*  blocks  */
 	map.draw(hdc, updateRect);
-
 	EndPaint(hWnd, &paintStruct);
 	return;
 }
 
-void timer(unsigned int current_timer) {
-	while (true) {
-		do Sleep(TIMER); while (!started && current_timer == active_timer);
-		if (current_timer != active_timer) return;
-		RECT rect;
-		GetClientRect(hwnd, &rect);
-		maplock.lock();
-		map.calc();
-		maplock.unlock();
-		RedrawWindow(hwnd, &rect, 0, RDW_INVALIDATE | RDW_UPDATENOW);
-	}
-}
 
 /* This is where all the input to the window goes to */
 LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) {
@@ -627,9 +615,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 	case WM_LBUTTONDOWN: {
 		POINTS cpos = MAKEPOINTS(lParam);
 		int xc = cpos.x / side_length, yc = cpos.y / side_length;
-		maplock.lock();
 		map.change(xc + xpivot, yc + ypivot);
-		maplock.unlock();
 		RECT crect = { xc * side_length + 1, yc * side_length + 1, (xc + 1) * side_length, (yc + 1) * side_length };
 		needErase = true;
 		RedrawWindow(hwnd, &crect, 0, RDW_INVALIDATE | RDW_ERASE);
@@ -689,7 +675,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 			else break;
 			HWND h = GetDlgItem(hdialog, idc);
 			char buf[2] = "";
-			_itoa_s((int)(wParam) - '0', buf, 2, 10);
+			_itoa_s((int)(wParam)-'0', buf, 2, 10);
 			SendMessage(h, WM_SETTEXT, 0, (LPARAM)buf);
 			break;
 		}
@@ -704,9 +690,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 	case WM_RBUTTONDOWN: {
 		POINTS cpos = MAKEPOINTS(lParam);
 		int xc = cpos.x / side_length, yc = cpos.y / side_length;
-		maplock.lock();
 		map.add_builtin(xc + xpivot, yc + ypivot);
-		maplock.unlock();
 		RECT crect;
 		if (selected_direction < 0);
 		else if (selected_direction < 4)
@@ -743,7 +727,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 		}
 		break;
 	}
-					 /* All other messages (a lot of them) are processed using default procedures */
+
+	case WM_TIMER: {
+		if (started) {
+			RECT rect;
+			GetClientRect(hwnd, &rect);
+			map.calc();
+			RedrawWindow(hwnd, &rect, 0, RDW_INVALIDATE | RDW_UPDATENOW);
+		}
+	}
+				   /* All other messages (a lot of them) are processed using default procedures */
 	default:
 		return DefWindowProc(hwnd, Message, wParam, lParam);
 	}
@@ -806,9 +799,8 @@ LRESULT CALLBACK DlgProc(HWND hdialog, UINT Message, WPARAM wParam, LPARAM lPara
 			int v = atoi(val);
 			if (v <= 0) SendMessage(hTimer, WM_SETTEXT, 0, (LPARAM)"1");
 			else {
-				thread Timer(timer, ++active_timer);
-				Timer.detach();
 				TIMER = v;
+				SetTimer(hwnd, TIMERID, TIMER, NULL);
 			}
 			break;
 		}
@@ -830,7 +822,7 @@ LRESULT CALLBACK DlgProc(HWND hdialog, UINT Message, WPARAM wParam, LPARAM lPara
 			started = !started;
 			break;
 		}
-							
+
 		case IDC_RESET: {
 			xpivot = ypivot = 0x08000000;
 			started = false;
@@ -898,9 +890,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	srand(GetTickCount());
 
 	tst();
-
-	thread Timer(timer, 0);
-	Timer.detach();
+	SetTimer(hwnd, TIMERID, TIMER, NULL);
 
 	/*
 		This is the heart of our program where all input is processed and
